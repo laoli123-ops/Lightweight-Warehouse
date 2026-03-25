@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Customer {
+  id          Int      @id @default(autoincrement())
+  nameCn      String   @map("name_cn")
+  namePinyin  String   @map("name_pinyin")
+  phone       String
+  phoneLast4  String   @map("phone_last4")
+  searchText  String   @map("search_text")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  inboundRecords InboundRecord[]
+
+  @@map("customers")
+}
+
+model WarehouseCode {
+  id            Int      @id @default(autoincrement())
+  areaCode      String   @map("area_code")
+  seqNo         Int      @map("seq_no")
+  warehouseCode String   @unique @map("warehouse_code")
+  codeStatus    String   @default("unused") @map("code_status")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  inboundRecords InboundRecord[]
+
+  @@map("warehouse_codes")
+}
+
+model InboundRecord {
+  id              Int      @id @default(autoincrement())
+  serialNo        Int      @map("serial_no")
+  inboundTime     DateTime @default(now()) @map("inbound_time")
+  inboundOrderNo  String   @map("inbound_order_no")
+  customerId      Int      @map("customer_id")
+  warehouseCodeId Int      @map("warehouse_code_id")
+  outboundStatus  String   @default("unshipped") @map("outbound_status")
+  inboundName     String?  @map("inbound_name")
+  inboundPhone    String?  @map("inbound_phone")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  warehouseCode WarehouseCode @relation(fields: [warehouseCodeId], references: [id])
+
+  @@map("inbound_records")
+}
