@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { customerId, inboundOrderNo, warehouseCodeId } = body;
+  const { customerId, inboundOrderNo, warehouseCodeId, forceCreate } = body;
 
   if (!customerId || !inboundOrderNo || !warehouseCodeId) {
     return NextResponse.json(
@@ -52,57 +52,88 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+  // Customer validation — safe outside transaction (immutable reference data)
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+  });
   if (!customer) {
     return NextResponse.json({ error: "客户不存在" }, { status: 404 });
   }
 
-  const wCode = await prisma.warehouseCode.findUnique({ where: { id: warehouseCodeId } });
-  if (!wCode || wCode.codeStatus !== "unused") {
-    return NextResponse.json({ error: "仓库码不可用" }, { status: 400 });
-  }
-
+  // Duplicate order number check — safe outside transaction (read-only gate)
   const existingOrder = await prisma.inboundRecord.findFirst({
     where: { inboundOrderNo },
   });
-  let duplicateWarning = false;
-  if (existingOrder) {
-    const forceCreate = body.forceCreate;
-    if (!forceCreate) {
+  if (existingOrder && !forceCreate) {
+    return NextResponse.json(
+      { error: "快递单号已存在", duplicate: true },
+      { status: 409 }
+    );
+  }
+
+  try {
+    const record = await prisma.$transaction(async (tx) => {
+      // Step A: Atomic warehouse code reservation.
+      // updateMany with a WHERE condition on codeStatus is the key —
+      // only ONE concurrent request can flip "unused" → "used".
+      // The loser gets count === 0.
+      const reserved = await tx.warehouseCode.updateMany({
+        where: { id: warehouseCodeId, codeStatus: "unused" },
+        data: { codeStatus: "used" },
+      });
+
+      if (reserved.count === 0) {
+        throw new Error("WAREHOUSE_CODE_UNAVAILABLE");
+      }
+
+      // Serial number generation inside transaction so SQLite's
+      // write-lock serializes concurrent callers.
+      const lastRecord = await tx.inboundRecord.findFirst({
+        orderBy: { serialNo: "desc" },
+      });
+      const serialNo = (lastRecord?.serialNo || 0) + 1;
+
+      // Step B: Create inbound record (same transaction — auto-rollback
+      // reverts the code reservation if this fails).
+      const rec = await tx.inboundRecord.create({
+        data: {
+          serialNo,
+          inboundOrderNo,
+          customerId,
+          warehouseCodeId,
+          outboundStatus: "unshipped",
+          inboundName: customer.nameCn,
+          inboundPhone: customer.phone,
+        },
+        include: { customer: true, warehouseCode: true },
+      });
+
+      return rec;
+    });
+
+    return NextResponse.json(
+      { record, duplicateWarning: !!existingOrder },
+      { status: 201 }
+    );
+  } catch (e: unknown) {
+    // Business error: code was already taken by another request
+    if (e instanceof Error && e.message === "WAREHOUSE_CODE_UNAVAILABLE") {
       return NextResponse.json(
-        { error: "快递单号已存在", duplicate: true },
+        { error: "仓库码已被占用或不可用，请刷新后重新选择" },
         { status: 409 }
       );
     }
-    duplicateWarning = true;
+
+    // Safety net: partial unique index caught a race condition
+    const errCode = (e as { code?: string })?.code;
+    const errMsg = e instanceof Error ? e.message : String(e);
+    if (errCode === "P2002" || errMsg.includes("UNIQUE constraint failed")) {
+      return NextResponse.json(
+        { error: "仓库码已被占用（并发冲突），请刷新后重新选择" },
+        { status: 409 }
+      );
+    }
+
+    throw e;
   }
-
-  const lastRecord = await prisma.inboundRecord.findFirst({
-    orderBy: { serialNo: "desc" },
-  });
-  const serialNo = (lastRecord?.serialNo || 0) + 1;
-
-  const record = await prisma.$transaction(async (tx) => {
-    const rec = await tx.inboundRecord.create({
-      data: {
-        serialNo,
-        inboundOrderNo,
-        customerId,
-        warehouseCodeId,
-        outboundStatus: "unshipped",
-        inboundName: customer.nameCn,
-        inboundPhone: customer.phone,
-      },
-      include: { customer: true, warehouseCode: true },
-    });
-
-    await tx.warehouseCode.update({
-      where: { id: warehouseCodeId },
-      data: { codeStatus: "used" },
-    });
-
-    return rec;
-  });
-
-  return NextResponse.json({ record, duplicateWarning }, { status: 201 });
 }
