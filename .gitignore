@@ -47,4 +47,4 @@ dev.db
 prisma/dev.db
 *.db
 prisma/*.db
-next.config.ts
+next.config.local.ts
