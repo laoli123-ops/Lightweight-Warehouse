@@ -105,7 +105,7 @@ export default function CustomersPage() {
           placeholder="搜索：中文名 / 拼音 / 手机号 / 尾号"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         />
         <button
           type="submit"
@@ -210,7 +210,7 @@ export default function CustomersPage() {
                   required
                   value={form.nameCn}
                   onChange={(e) => setForm({ ...form, nameCn: e.target.value })}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -222,7 +222,7 @@ export default function CustomersPage() {
                   required
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -234,7 +234,7 @@ export default function CustomersPage() {
                   value={form.namePinyin}
                   onChange={(e) => setForm({ ...form, namePinyin: e.target.value })}
                   placeholder="留空则自动根据中文名生成"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <div className="flex justify-end gap-2">

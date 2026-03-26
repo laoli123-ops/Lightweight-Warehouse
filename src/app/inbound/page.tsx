@@ -18,6 +18,11 @@ interface WCode {
   seqNo: number;
 }
 
+interface Toast {
+  type: "success" | "error";
+  message: string;
+}
+
 export default function InboundPage() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -27,11 +32,23 @@ export default function InboundPage() {
   const [selectedCode, setSelectedCode] = useState<WCode | null>(null);
   const [areaFilter, setAreaFilter] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [duplicateWarning, setDuplicateWarning] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState("");
   const [showScanner, setShowScanner] = useState(false);
+  const [toast, setToast] = useState<Toast | null>(null);
   const orderInputRef = useRef<HTMLInputElement>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
+
+  const showToast = useCallback((type: Toast["type"], message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ type, message });
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   const handleScanResult = useCallback((value: string) => {
     setInboundOrderNo(value.trim());
@@ -57,14 +74,12 @@ export default function InboundPage() {
 
   const handleSubmit = async (forceCreate = false) => {
     if (!selectedCustomer || !inboundOrderNo || !selectedCode) {
-      setErrorMsg("请完整填写所有字段");
+      showToast("error", "请完整填写所有字段");
       return;
     }
 
     setSubmitting(true);
-    setErrorMsg("");
-    setSuccessMsg("");
-    setDuplicateWarning(false);
+    setDuplicateWarning("");
 
     const res = await fetch("/api/inbound", {
       method: "POST",
@@ -80,19 +95,19 @@ export default function InboundPage() {
     const data = await res.json();
 
     if (res.status === 409 && data.duplicate) {
-      setDuplicateWarning(true);
-      setErrorMsg("快递单号已存在，是否仍要入库？");
+      setDuplicateWarning("快递单号已存在，是否仍要入库？");
       setSubmitting(false);
       return;
     }
 
     if (!res.ok) {
-      setErrorMsg(data.error || "入库失败");
+      showToast("error", data.error || "入库失败");
       setSubmitting(false);
       return;
     }
 
-    setSuccessMsg(
+    showToast(
+      "success",
       `入库成功！序号: ${data.record.serialNo}，仓库码: ${data.record.warehouseCode.warehouseCode}`
     );
     setSelectedCustomer(null);
@@ -100,7 +115,7 @@ export default function InboundPage() {
     setSelectedCode(null);
     setCustomerSearch("");
     setCustomers([]);
-    setDuplicateWarning(false);
+    setDuplicateWarning("");
     fetchUnusedCodes();
     setSubmitting(false);
   };
@@ -115,15 +130,16 @@ export default function InboundPage() {
     <div className="mx-auto max-w-3xl">
       <h1 className="mb-6 text-2xl font-bold">入库登记</h1>
 
-      {successMsg && (
-        <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-700">
-          {successMsg}
-        </div>
-      )}
-
-      {errorMsg && !duplicateWarning && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-          {errorMsg}
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed left-1/2 top-4 z-[100] -translate-x-1/2 rounded-lg px-5 py-3 shadow-lg transition-all sm:top-6 ${
+            toast.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          <p className="text-sm font-medium whitespace-pre-line">{toast.message}</p>
         </div>
       )}
 
@@ -138,7 +154,7 @@ export default function InboundPage() {
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchCustomers()}
-              className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
             />
             <button
               onClick={searchCustomers}
@@ -201,7 +217,7 @@ export default function InboundPage() {
                   e.preventDefault();
                 }
               }}
-              className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
             />
             <button
               type="button"
@@ -234,7 +250,7 @@ export default function InboundPage() {
             <select
               value={areaFilter}
               onChange={(e) => setAreaFilter(e.target.value)}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
             >
               <option value="">全部区域</option>
               {uniqueAreas.map((a) => (
@@ -283,7 +299,7 @@ export default function InboundPage() {
         {/* Duplicate warning */}
         {duplicateWarning && (
           <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <p className="text-sm font-medium text-yellow-800">快递单号已存在，确定仍要入库吗？</p>
+            <p className="text-sm font-medium text-yellow-800">{duplicateWarning}</p>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => handleSubmit(true)}
@@ -292,7 +308,7 @@ export default function InboundPage() {
                 确认入库
               </button>
               <button
-                onClick={() => { setDuplicateWarning(false); setErrorMsg(""); }}
+                onClick={() => setDuplicateWarning("")}
                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50"
               >
                 取消

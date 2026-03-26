@@ -53,7 +53,7 @@ export default function LabelsPage() {
               <select
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               >
                 {["A", "B", "C", "D", "E", "F"].map((p) => (
                   <option key={p} value={p}>
@@ -71,7 +71,7 @@ export default function LabelsPage() {
                 type="number"
                 value={start}
                 onChange={(e) => setStart(parseInt(e.target.value) || 0)}
-                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
@@ -83,7 +83,7 @@ export default function LabelsPage() {
                 type="number"
                 value={end}
                 onChange={(e) => setEnd(parseInt(e.target.value) || 0)}
-                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 

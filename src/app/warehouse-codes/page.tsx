@@ -80,7 +80,7 @@ export default function WarehouseCodesPage() {
               <select
                 value={genForm.areaCode}
                 onChange={(e) => setGenForm({ ...genForm, areaCode: e.target.value })}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               >
                 {["A", "B", "C", "D", "E", "F"].map((a) => (
                   <option key={a} value={a}>{a}</option>
@@ -93,7 +93,7 @@ export default function WarehouseCodesPage() {
                 type="number"
                 value={genForm.startSeq}
                 onChange={(e) => setGenForm({ ...genForm, startSeq: parseInt(e.target.value) || 0 })}
-                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
@@ -102,7 +102,7 @@ export default function WarehouseCodesPage() {
                 type="number"
                 value={genForm.endSeq}
                 onChange={(e) => setGenForm({ ...genForm, endSeq: parseInt(e.target.value) || 0 })}
-                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
             <button
@@ -125,7 +125,7 @@ export default function WarehouseCodesPage() {
         <select
           value={areaFilter}
           onChange={(e) => { setAreaFilter(e.target.value); setPage(1); }}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
           <option value="">全部区域</option>
           {["A", "B", "C", "D", "E", "F"].map((a) => (
@@ -135,7 +135,7 @@ export default function WarehouseCodesPage() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
           <option value="">全部状态</option>
           <option value="unused">未使用</option>
