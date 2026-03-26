@@ -8,24 +8,28 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<unknown>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
   const stoppedRef = useRef(false);
   const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !window.isSecureContext) {
       setError(
         "当前页面不是安全上下文（非 HTTPS），浏览器禁止访问摄像头。\n" +
-        "请使用 https://<局域网IP>:3000 访问本页面。"
+          "请使用 https://<局域网IP>:3000 访问本页面。"
       );
       return;
     }
 
-    if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
+    if (
+      typeof navigator !== "undefined" &&
+      !navigator.mediaDevices?.getUserMedia
+    ) {
       setError(
         "当前浏览器不支持摄像头访问（mediaDevices API 不可用）。\n" +
-        "请使用 HTTPS 访问，或换用 Chrome / Safari 浏览器。"
+          "请使用 HTTPS 访问，或换用 Chrome / Safari 浏览器。"
       );
       return;
     }
@@ -33,38 +37,57 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
     let mounted = true;
     stoppedRef.current = false;
 
-    function safeStop(scanner: { stop?: () => Promise<void> } | null) {
-      if (stoppedRef.current || !scanner?.stop) return;
-      stoppedRef.current = true;
-      try {
-        scanner.stop().catch(() => {});
-      } catch {
-        // scanner already stopped — ignore
-      }
-    }
-
     async function startScanner() {
       try {
-        const { Html5Qrcode } = await import("html5-qrcode");
+        const { BrowserMultiFormatReader } = await import("@zxing/browser");
+        const ZXing = await import("@zxing/library");
 
-        if (!mounted || !containerRef.current) return;
+        if (!mounted || !videoRef.current) return;
 
-        const scanner = new Html5Qrcode("barcode-reader");
-        scannerRef.current = scanner;
+        const hints = new Map();
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+          ZXing.BarcodeFormat.CODE_128,
+          ZXing.BarcodeFormat.CODE_39,
+          ZXing.BarcodeFormat.EAN_13,
+          ZXing.BarcodeFormat.EAN_8,
+          ZXing.BarcodeFormat.UPC_A,
+          ZXing.BarcodeFormat.UPC_E,
+          ZXing.BarcodeFormat.ITF,
+          ZXing.BarcodeFormat.CODABAR,
+          ZXing.BarcodeFormat.QR_CODE,
+        ]);
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
 
-        await scanner.start(
-          { facingMode: "environment" },
+        const reader = new BrowserMultiFormatReader(hints, {
+          delayBetweenScanAttempts: 400,
+        });
+
+        const controls = await reader.decodeFromConstraints(
           {
-            fps: 10,
-            qrbox: { width: 280, height: 120 },
-            aspectRatio: 1.0,
+            video: {
+              facingMode: "environment",
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
           },
-          (decodedText) => {
-            safeStop(scanner);
-            onScan(decodedText);
-          },
-          () => {}
+          videoRef.current,
+          (result, _err, controls) => {
+            if (result && !stoppedRef.current) {
+              stoppedRef.current = true;
+              controls.stop();
+              controlsRef.current = null;
+              onScan(result.getText());
+            }
+          }
         );
+
+        if (!mounted || stoppedRef.current) {
+          controls.stop();
+          return;
+        }
+
+        controlsRef.current = controls;
+        setReady(true);
       } catch (e) {
         if (!mounted) return;
 
@@ -76,10 +99,11 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
           } else if (e.name === "NotFoundError") {
             msg = "未检测到摄像头设备。";
           } else if (e.name === "NotReadableError") {
-            msg = "摄像头被其他应用占用，请关闭其他使用摄像头的应用后重试。";
+            msg =
+              "摄像头被其他应用占用，请关闭其他使用摄像头的应用后重试。";
           }
         } else {
-          msg = "无法启动摄像头，请检查权限设置";
+          msg = "无法启动摄像头，请检查权限设置。";
         }
         setError(msg);
       }
@@ -89,21 +113,39 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
 
     return () => {
       mounted = false;
-      safeStop(scannerRef.current as { stop?: () => Promise<void> } | null);
+      if (!stoppedRef.current && controlsRef.current) {
+        stoppedRef.current = true;
+        try {
+          controlsRef.current.stop();
+        } catch {
+          /* already stopped */
+        }
+        controlsRef.current = null;
+      }
     };
   }, [onScan]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-sm rounded-xl bg-white p-4 shadow-xl mx-4">
+      <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-bold">扫描条码</h3>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -116,15 +158,28 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
             </p>
           </div>
         ) : (
-          <div
-            id="barcode-reader"
-            ref={containerRef}
-            className="overflow-hidden rounded-lg"
-          />
+          <div className="relative overflow-hidden rounded-lg bg-black">
+            <video
+              ref={videoRef}
+              className="w-full"
+              style={{ maxHeight: "60vh" }}
+              playsInline
+              muted
+            />
+            {/* Scan guide overlay */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="h-16 w-64 rounded border-2 border-white/60" />
+            </div>
+            {!ready && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <span className="text-sm text-white">正在启动摄像头…</span>
+              </div>
+            )}
+          </div>
         )}
 
         <p className="mt-3 text-center text-xs text-gray-400">
-          将条码对准框内，自动识别
+          将条码对准框内，自动识别 · 支持 CODE128 / EAN / UPC / ITF / QR
         </p>
       </div>
     </div>

@@ -15,8 +15,9 @@
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "better-sqlite3": "^12.8.0",
-    "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.12.3",
     "next": "16.2.1",
     "pinyin-pro": "^3.28.0",
