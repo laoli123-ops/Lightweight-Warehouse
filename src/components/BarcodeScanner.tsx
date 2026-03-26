@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface BarcodeScannerProps {
   onScan: (value: string) => void;
@@ -8,6 +9,7 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const stoppedRef = useRef(false);
@@ -16,10 +18,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
 
   useEffect(() => {
     if (typeof window !== "undefined" && !window.isSecureContext) {
-      setError(
-        "当前页面不是安全上下文（非 HTTPS），浏览器禁止访问摄像头。\n" +
-          "请使用 https://<局域网IP>:3000 访问本页面。"
-      );
+      setError(t.scanNotSecure);
       return;
     }
 
@@ -27,10 +26,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
       typeof navigator !== "undefined" &&
       !navigator.mediaDevices?.getUserMedia
     ) {
-      setError(
-        "当前浏览器不支持摄像头访问（mediaDevices API 不可用）。\n" +
-          "请使用 HTTPS 访问，或换用 Chrome / Safari 浏览器。"
-      );
+      setError(t.scanNoMedia);
       return;
     }
 
@@ -94,16 +90,11 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
         let msg: string;
         if (e instanceof Error) {
           msg = e.message;
-          if (e.name === "NotAllowedError") {
-            msg = "摄像头权限被拒绝，请在浏览器设置中允许摄像头访问。";
-          } else if (e.name === "NotFoundError") {
-            msg = "未检测到摄像头设备。";
-          } else if (e.name === "NotReadableError") {
-            msg =
-              "摄像头被其他应用占用，请关闭其他使用摄像头的应用后重试。";
-          }
+          if (e.name === "NotAllowedError") msg = t.scanPermDenied;
+          else if (e.name === "NotFoundError") msg = t.scanNotFound;
+          else if (e.name === "NotReadableError") msg = t.scanNotReadable;
         } else {
-          msg = "无法启动摄像头，请检查权限设置。";
+          msg = t.scanGenericError;
         }
         setError(msg);
       }
@@ -123,29 +114,19 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
         controlsRef.current = null;
       }
     };
-  }, [onScan]);
+  }, [onScan, t]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-bold">扫描条码</h3>
+          <h3 className="text-base font-bold">{t.scanTitle}</h3>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -153,9 +134,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
         {error ? (
           <div className="rounded-lg bg-red-50 p-4 text-center">
             <p className="whitespace-pre-line text-sm text-red-600">{error}</p>
-            <p className="mt-2 text-xs text-gray-500">
-              请确保使用 HTTPS 访问并已授予摄像头权限，或使用手动输入
-            </p>
+            <p className="mt-2 text-xs text-gray-500">{t.scanHintSecure}</p>
           </div>
         ) : (
           <div className="relative overflow-hidden rounded-lg bg-black">
@@ -166,21 +145,18 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
               playsInline
               muted
             />
-            {/* Scan guide overlay */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="h-16 w-64 rounded border-2 border-white/60" />
             </div>
             {!ready && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <span className="text-sm text-white">正在启动摄像头…</span>
+                <span className="text-sm text-white">{t.scanStarting}</span>
               </div>
             )}
           </div>
         )}
 
-        <p className="mt-3 text-center text-xs text-gray-400">
-          将条码对准框内，自动识别 · 支持 CODE128 / EAN / UPC / ITF / QR
-        </p>
+        <p className="mt-3 text-center text-xs text-gray-400">{t.scanGuide}</p>
       </div>
     </div>
   );

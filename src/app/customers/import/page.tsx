@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface ImportResult {
   total: number;
@@ -10,6 +11,7 @@ interface ImportResult {
 }
 
 export default function CustomerImportPage() {
+  const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -31,7 +33,7 @@ export default function CustomerImportPage() {
       const data = await res.json();
       setResult(data);
     } catch {
-      setResult({ total: 0, success: 0, failed: 0, errors: ["导入失败，请检查文件格式"] });
+      setResult({ total: 0, success: 0, failed: 0, errors: [t.importFailed] });
     }
 
     setImporting(false);
@@ -39,16 +41,16 @@ export default function CustomerImportPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold">客户数据导入</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.customerImportTitle}</h1>
 
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="mb-4">
-          <h2 className="mb-2 text-sm font-medium text-gray-700">文件要求</h2>
+          <h2 className="mb-2 text-sm font-medium text-gray-700">{t.fileRequirements}</h2>
           <ul className="space-y-1 text-sm text-gray-500">
-            <li>支持 .xlsx 和 .csv 格式</li>
-            <li>必须包含列：<span className="font-medium text-gray-700">姓名</span>、<span className="font-medium text-gray-700">手机号</span></li>
-            <li>也支持列名：中文名、客户姓名、name、电话、phone、手机、联系电话</li>
-            <li>手机号允许重复，不会去重</li>
+            <li>{t.fileReq1}</li>
+            <li>{t.fileReq2_prefix}<span className="font-medium text-gray-700">{t.fileReq2_name}</span>、<span className="font-medium text-gray-700">{t.fileReq2_phone}</span></li>
+            <li>{t.fileReq3}</li>
+            <li>{t.fileReq4}</li>
           </ul>
         </div>
 
@@ -76,17 +78,17 @@ export default function CustomerImportPage() {
                 }}
                 className="mt-2 text-sm text-red-500 hover:text-red-700"
               >
-                移除
+                {t.remove}
               </button>
             </div>
           ) : (
             <div>
-              <p className="text-sm text-gray-500">点击或拖拽文件到此处</p>
+              <p className="text-sm text-gray-500">{t.dropOrClick}</p>
               <button
                 onClick={() => fileRef.current?.click()}
                 className="mt-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium hover:bg-gray-200"
               >
-                选择文件
+                {t.selectFile}
               </button>
             </div>
           )}
@@ -97,30 +99,30 @@ export default function CustomerImportPage() {
           disabled={!file || importing}
           className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {importing ? "导入中..." : "开始导入"}
+          {importing ? t.importing : t.startImport}
         </button>
       </div>
 
       {result && (
         <div className="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold">导入结果</h2>
+          <h2 className="mb-4 text-lg font-bold">{t.importResult}</h2>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="rounded-lg bg-gray-50 p-3">
               <p className="text-2xl font-bold text-gray-900">{result.total}</p>
-              <p className="text-xs text-gray-500">总行数</p>
+              <p className="text-xs text-gray-500">{t.totalRows}</p>
             </div>
             <div className="rounded-lg bg-green-50 p-3">
               <p className="text-2xl font-bold text-green-600">{result.success}</p>
-              <p className="text-xs text-gray-500">成功</p>
+              <p className="text-xs text-gray-500">{t.success}</p>
             </div>
             <div className="rounded-lg bg-red-50 p-3">
               <p className="text-2xl font-bold text-red-600">{result.failed}</p>
-              <p className="text-xs text-gray-500">失败</p>
+              <p className="text-xs text-gray-500">{t.failed}</p>
             </div>
           </div>
           {result.errors.length > 0 && (
             <div className="mt-4">
-              <h3 className="mb-2 text-sm font-medium text-red-600">错误详情</h3>
+              <h3 className="mb-2 text-sm font-medium text-red-600">{t.errorDetails}</h3>
               <ul className="max-h-40 overflow-y-auto space-y-1 text-sm text-red-500">
                 {result.errors.map((err, i) => (
                   <li key={i}>{err}</li>

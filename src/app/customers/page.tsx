@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface Customer {
   id: number;
@@ -11,6 +12,7 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const { t } = useI18n();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -80,7 +82,7 @@ export default function CustomersPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("确定删除该客户？")) return;
+    if (!confirm(t.confirmDelete)) return;
     await fetch(`/api/customers/${id}`, { method: "DELETE" });
     fetchCustomers();
   };
@@ -90,19 +92,19 @@ export default function CustomersPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">客户管理</h1>
+        <h1 className="text-2xl font-bold">{t.navCustomers}</h1>
         <button
           onClick={openAdd}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          + 新增客户
+          {t.addCustomer}
         </button>
       </div>
 
       <form onSubmit={handleSearch} className="mb-4 flex gap-2">
         <input
           type="text"
-          placeholder="搜索：中文名 / 拼音 / 手机号 / 尾号"
+          placeholder={t.searchCustomerPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
@@ -111,7 +113,7 @@ export default function CustomersPage() {
           type="submit"
           className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium hover:bg-gray-200"
         >
-          搜索
+          {t.search}
         </button>
       </form>
 
@@ -119,25 +121,25 @@ export default function CustomersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-left">
-              <th className="px-4 py-3 font-medium text-gray-600">ID</th>
-              <th className="px-4 py-3 font-medium text-gray-600">中文名</th>
-              <th className="px-4 py-3 font-medium text-gray-600">拼音</th>
-              <th className="px-4 py-3 font-medium text-gray-600">手机号</th>
-              <th className="px-4 py-3 font-medium text-gray-600">尾号</th>
-              <th className="px-4 py-3 font-medium text-gray-600">操作</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thId}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thName}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thPinyin}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thPhone}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thPhoneLast4}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thActions}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                  加载中...
+                  {t.loading}
                 </td>
               </tr>
             ) : customers.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                  暂无数据
+                  {t.noData}
                 </td>
               </tr>
             ) : (
@@ -153,13 +155,13 @@ export default function CustomersPage() {
                       onClick={() => openEdit(c)}
                       className="mr-2 text-blue-600 hover:text-blue-800"
                     >
-                      编辑
+                      {t.edit}
                     </button>
                     <button
                       onClick={() => handleDelete(c.id)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      删除
+                      {t.delete}
                     </button>
                   </td>
                 </tr>
@@ -171,24 +173,22 @@ export default function CustomersPage() {
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>共 {total} 条记录</span>
+          <span>{t.totalRecords(total)}</span>
           <div className="flex gap-1">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
               className="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40"
             >
-              上一页
+              {t.prevPage}
             </button>
-            <span className="px-3 py-1">
-              {page} / {totalPages}
-            </span>
+            <span className="px-3 py-1">{t.pageOf(page, totalPages)}</span>
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
               className="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40"
             >
-              下一页
+              {t.nextPage}
             </button>
           </div>
         </div>
@@ -198,12 +198,12 @@ export default function CustomersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-lg font-bold">
-              {editingCustomer ? "编辑客户" : "新增客户"}
+              {editingCustomer ? t.editCustomer : t.addCustomerTitle}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  中文名 <span className="text-red-500">*</span>
+                  {t.labelName} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -215,7 +215,7 @@ export default function CustomersPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  手机号 <span className="text-red-500">*</span>
+                  {t.labelPhone} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -227,13 +227,13 @@ export default function CustomersPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  拼音（留空自动生成）
+                  {t.labelPinyin}
                 </label>
                 <input
                   type="text"
                   value={form.namePinyin}
                   onChange={(e) => setForm({ ...form, namePinyin: e.target.value })}
-                  placeholder="留空则自动根据中文名生成"
+                  placeholder={t.pinyinPlaceholder}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
@@ -243,13 +243,13 @@ export default function CustomersPage() {
                   onClick={() => setShowModal(false)}
                   className="rounded-lg border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50"
                 >
-                  取消
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                 >
-                  保存
+                  {t.save}
                 </button>
               </div>
             </form>

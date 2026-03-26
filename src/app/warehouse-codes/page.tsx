@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface WCode {
   id: number;
@@ -10,13 +11,8 @@ interface WCode {
   codeStatus: string;
 }
 
-const statusMap: Record<string, { label: string; color: string }> = {
-  unused: { label: "未使用", color: "bg-green-100 text-green-700" },
-  used: { label: "已使用", color: "bg-yellow-100 text-yellow-700" },
-  shipped: { label: "已出库", color: "bg-gray-100 text-gray-500" },
-};
-
 export default function WarehouseCodesPage() {
+  const { t } = useI18n();
   const [codes, setCodes] = useState<WCode[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -26,6 +22,12 @@ export default function WarehouseCodesPage() {
   const [showGenerate, setShowGenerate] = useState(false);
   const [genForm, setGenForm] = useState({ areaCode: "A", startSeq: 101, endSeq: 150 });
   const [genResult, setGenResult] = useState<{ created: number; skipped: number } | null>(null);
+
+  const statusMap: Record<string, { label: string; color: string }> = {
+    unused: { label: t.statusUnused, color: "bg-green-100 text-green-700" },
+    used: { label: t.statusUsed, color: "bg-yellow-100 text-yellow-700" },
+    shipped: { label: t.statusShipped, color: "bg-gray-100 text-gray-500" },
+  };
 
   const fetchCodes = useCallback(async () => {
     setLoading(true);
@@ -62,21 +64,21 @@ export default function WarehouseCodesPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">仓库码池</h1>
+        <h1 className="text-2xl font-bold">{t.navWarehouseCodes}</h1>
         <button
           onClick={() => { setShowGenerate(!showGenerate); setGenResult(null); }}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          + 批量生成
+          {t.batchGenerate}
         </button>
       </div>
 
       {showGenerate && (
         <div className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-bold">批量生成仓库码</h2>
+          <h2 className="mb-4 text-base font-bold">{t.batchGenerateTitle}</h2>
           <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">区域</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t.labelArea}</label>
               <select
                 value={genForm.areaCode}
                 onChange={(e) => setGenForm({ ...genForm, areaCode: e.target.value })}
@@ -88,7 +90,7 @@ export default function WarehouseCodesPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">起始序号</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t.labelStartSeq}</label>
               <input
                 type="number"
                 value={genForm.startSeq}
@@ -97,7 +99,7 @@ export default function WarehouseCodesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">结束序号</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t.labelEndSeq}</label>
               <input
                 type="number"
                 value={genForm.endSeq}
@@ -109,13 +111,13 @@ export default function WarehouseCodesPage() {
               type="submit"
               className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
             >
-              生成
+              {t.generate}
             </button>
           </form>
           {genResult && (
             <p className="mt-3 text-sm text-gray-600">
-              已创建 <span className="font-bold text-green-600">{genResult.created}</span> 个，
-              跳过 <span className="font-bold text-yellow-600">{genResult.skipped}</span> 个（已存在）
+              <span className="font-bold text-green-600">{t.genCreated(genResult.created)}</span>
+              ，<span className="font-bold text-yellow-600">{t.genSkipped(genResult.skipped)}</span>
             </p>
           )}
         </div>
@@ -127,9 +129,9 @@ export default function WarehouseCodesPage() {
           onChange={(e) => { setAreaFilter(e.target.value); setPage(1); }}
           className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
-          <option value="">全部区域</option>
+          <option value="">{t.allAreas}</option>
           {["A", "B", "C", "D", "E", "F"].map((a) => (
-            <option key={a} value={a}>区域 {a}</option>
+            <option key={a} value={a}>{t.areaLabel(a)}</option>
           ))}
         </select>
         <select
@@ -137,10 +139,10 @@ export default function WarehouseCodesPage() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
-          <option value="">全部状态</option>
-          <option value="unused">未使用</option>
-          <option value="used">已使用</option>
-          <option value="shipped">已出库</option>
+          <option value="">{t.allStatus}</option>
+          <option value="unused">{t.statusUnused}</option>
+          <option value="used">{t.statusUsed}</option>
+          <option value="shipped">{t.statusShipped}</option>
         </select>
       </div>
 
@@ -148,20 +150,20 @@ export default function WarehouseCodesPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-left">
-              <th className="px-4 py-3 font-medium text-gray-600">仓库码</th>
-              <th className="px-4 py-3 font-medium text-gray-600">区域</th>
-              <th className="px-4 py-3 font-medium text-gray-600">序号</th>
-              <th className="px-4 py-3 font-medium text-gray-600">状态</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thWarehouseCode}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.labelArea}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thSeqNo}</th>
+              <th className="px-4 py-3 font-medium text-gray-600">{t.thStatus}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">加载中...</td>
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">{t.loading}</td>
               </tr>
             ) : codes.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">暂无数据</td>
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">{t.noData}</td>
               </tr>
             ) : (
               codes.map((c) => (
@@ -183,22 +185,22 @@ export default function WarehouseCodesPage() {
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>共 {total} 条</span>
+          <span>{t.totalItems(total)}</span>
           <div className="flex gap-1">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
               className="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40"
             >
-              上一页
+              {t.prevPage}
             </button>
-            <span className="px-3 py-1">{page} / {totalPages}</span>
+            <span className="px-3 py-1">{t.pageOf(page, totalPages)}</span>
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
               className="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40"
             >
-              下一页
+              {t.nextPage}
             </button>
           </div>
         </div>

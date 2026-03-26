@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface InboundRecord {
   id: number;
@@ -24,6 +25,7 @@ interface InboundRecord {
 }
 
 export default function RecordsPage() {
+  const { t, locale } = useI18n();
   const [records, setRecords] = useState<InboundRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -48,13 +50,13 @@ export default function RecordsPage() {
   }, [fetchRecords]);
 
   const handleShip = async (id: number) => {
-    if (!confirm("确认出库？")) return;
+    if (!confirm(t.confirmShip)) return;
     const res = await fetch(`/api/inbound/${id}/ship`, { method: "POST" });
     if (res.ok) {
       fetchRecords();
     } else {
       const data = await res.json();
-      alert(data.error || "出库失败");
+      alert(data.error || t.shipFailed);
     }
   };
 
@@ -65,15 +67,16 @@ export default function RecordsPage() {
   };
 
   const totalPages = Math.ceil(total / 20);
+  const dateLang = locale === "ko" ? "ko-KR" : "zh-CN";
 
   return (
     <div className="mx-auto max-w-6xl">
-      <h1 className="mb-6 text-2xl font-bold">库存记录</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.recordsTitle}</h1>
 
       <form onSubmit={handleSearch} className="mb-4 flex flex-wrap gap-2">
         <input
           type="text"
-          placeholder="搜索：单号 / 姓名 / 拼音 / 手机号 / 仓库码"
+          placeholder={t.searchRecordPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 min-w-[200px] rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
@@ -83,15 +86,15 @@ export default function RecordsPage() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
-          <option value="">全部状态</option>
-          <option value="unshipped">未出库</option>
-          <option value="shipped">已出库</option>
+          <option value="">{t.allStatus}</option>
+          <option value="unshipped">{t.statusUnshipped}</option>
+          <option value="shipped">{t.statusShipped}</option>
         </select>
         <button
           type="submit"
           className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium hover:bg-gray-200"
         >
-          搜索
+          {t.search}
         </button>
       </form>
 
@@ -99,31 +102,31 @@ export default function RecordsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-left">
-              <th className="px-3 py-3 font-medium text-gray-600">序号</th>
-              <th className="px-3 py-3 font-medium text-gray-600">入库时间</th>
-              <th className="px-3 py-3 font-medium text-gray-600">快递单号</th>
-              <th className="px-3 py-3 font-medium text-gray-600">姓名</th>
-              <th className="px-3 py-3 font-medium text-gray-600">手机号</th>
-              <th className="px-3 py-3 font-medium text-gray-600">仓库码</th>
-              <th className="px-3 py-3 font-medium text-gray-600">状态</th>
-              <th className="px-3 py-3 font-medium text-gray-600">操作</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thSerialNo}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thInboundTime}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thOrderNo}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thCustomerName}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thPhone}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thWarehouseCode}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thStatus}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thActions}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">加载中...</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">{t.loading}</td>
               </tr>
             ) : records.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">暂无数据</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">{t.noData}</td>
               </tr>
             ) : (
               records.map((r) => (
                 <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="px-3 py-3 text-gray-500">{r.serialNo}</td>
                   <td className="px-3 py-3 text-gray-600 whitespace-nowrap">
-                    {new Date(r.inboundTime).toLocaleString("zh-CN", {
+                    {new Date(r.inboundTime).toLocaleString(dateLang, {
                       month: "2-digit",
                       day: "2-digit",
                       hour: "2-digit",
@@ -139,11 +142,11 @@ export default function RecordsPage() {
                   <td className="px-3 py-3">
                     {r.outboundStatus === "shipped" ? (
                       <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
-                        已出库
+                        {t.statusShipped}
                       </span>
                     ) : (
                       <span className="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                        未出库
+                        {t.statusUnshipped}
                       </span>
                     )}
                   </td>
@@ -153,7 +156,7 @@ export default function RecordsPage() {
                         onClick={() => handleShip(r.id)}
                         className="rounded-lg bg-orange-500 px-3 py-1 text-xs font-medium text-white hover:bg-orange-600"
                       >
-                        一键出库
+                        {t.shipBtn}
                       </button>
                     )}
                   </td>
@@ -166,22 +169,22 @@ export default function RecordsPage() {
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>共 {total} 条记录</span>
+          <span>{t.totalRecords(total)}</span>
           <div className="flex gap-1">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
               className="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40"
             >
-              上一页
+              {t.prevPage}
             </button>
-            <span className="px-3 py-1">{page} / {totalPages}</span>
+            <span className="px-3 py-1">{t.pageOf(page, totalPages)}</span>
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
               className="rounded px-3 py-1 hover:bg-gray-100 disabled:opacity-40"
             >
-              下一页
+              {t.nextPage}
             </button>
           </div>
         </div>

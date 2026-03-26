@@ -1,20 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 const modules = [
-  { href: "/customers", label: "客户管理", desc: "管理客户信息，支持搜索和编辑", icon: "👤", color: "bg-blue-500" },
-  { href: "/customers/import", label: "客户导入", desc: "从 Excel/CSV 批量导入客户", icon: "📥", color: "bg-green-500" },
-  { href: "/warehouse-codes", label: "仓库码池", desc: "生成和管理仓库码", icon: "🏷️", color: "bg-purple-500" },
-  { href: "/inbound", label: "入库登记", desc: "登记包裹入库信息", icon: "📦", color: "bg-orange-500" },
-  { href: "/records", label: "库存记录", desc: "查看入库记录，一键出库", icon: "📋", color: "bg-teal-500" },
-  { href: "/labels", label: "标签预览", desc: "预览仓库码标签，准备打印", icon: "🖨️", color: "bg-rose-500" },
+  { href: "/customers", labelKey: "navCustomers" as const, descKey: "descCustomers" as const, icon: "👤", color: "bg-blue-500" },
+  { href: "/customers/import", labelKey: "navCustomerImport" as const, descKey: "descCustomerImport" as const, icon: "📥", color: "bg-green-500" },
+  { href: "/warehouse-codes", labelKey: "navWarehouseCodes" as const, descKey: "descWarehouseCodes" as const, icon: "🏷️", color: "bg-purple-500" },
+  { href: "/inbound", labelKey: "navInbound" as const, descKey: "descInbound" as const, icon: "📦", color: "bg-orange-500" },
+  { href: "/records", labelKey: "navRecords" as const, descKey: "descRecords" as const, icon: "📋", color: "bg-teal-500" },
+  { href: "/labels", labelKey: "navLabels" as const, descKey: "descLabels" as const, icon: "🖨️", color: "bg-rose-500" },
 ];
 
 export default function HomePage() {
+  const { t } = useI18n();
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900">轻量仓库管理系统</h1>
-        <p className="mt-2 text-gray-500">快速入库 · 快速查询 · 高效管理</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t.systemTitle}</h1>
+        <p className="mt-2 text-gray-500">{t.systemSubtitle}</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((m) => (
@@ -26,8 +31,8 @@ export default function HomePage() {
             <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${m.color} text-lg text-white`}>
               {m.icon}
             </div>
-            <h2 className="text-base font-semibold text-gray-900 group-hover:text-blue-600">{m.label}</h2>
-            <p className="mt-1 text-sm text-gray-500">{m.desc}</p>
+            <h2 className="text-base font-semibold text-gray-900 group-hover:text-blue-600">{t[m.labelKey]}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t[m.descKey]}</p>
           </Link>
         ))}
       </div>
