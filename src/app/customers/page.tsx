@@ -21,6 +21,7 @@ export default function CustomersPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [form, setForm] = useState({ nameCn: "", phone: "", namePinyin: "" });
+  const [formError, setFormError] = useState("");
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
@@ -46,35 +47,48 @@ export default function CustomersPage() {
   const openAdd = () => {
     setEditingCustomer(null);
     setForm({ nameCn: "", phone: "", namePinyin: "" });
+    setFormError("");
     setShowModal(true);
   };
 
   const openEdit = (c: Customer) => {
     setEditingCustomer(c);
     setForm({ nameCn: c.nameCn, phone: c.phone, namePinyin: c.namePinyin });
+    setFormError("");
     setShowModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
+
+    const normalized = form.phone.replace(/[\s\-().]/g, "");
+    if (!/^\+?\d{8,15}$/.test(normalized)) {
+      setFormError(t.phoneInvalid);
+      return;
+    }
+
     const payload = {
       nameCn: form.nameCn,
-      phone: form.phone,
+      phone: normalized,
       namePinyin: form.namePinyin || undefined,
     };
 
-    if (editingCustomer) {
-      await fetch(`/api/customers/${editingCustomer.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      await fetch("/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const url = editingCustomer
+      ? `/api/customers/${editingCustomer.id}`
+      : "/api/customers";
+    const method = editingCustomer ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setFormError(data.error || "Error");
+      return;
     }
 
     setShowModal(false);
@@ -201,6 +215,11 @@ export default function CustomersPage() {
               {editingCustomer ? t.editCustomer : t.addCustomerTitle}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {formError && (
+                <div className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-600">
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
                   {t.labelName} <span className="text-red-500">*</span>

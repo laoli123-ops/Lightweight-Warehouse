@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { toPinyin, getPhoneLast4, buildSearchText } from "@/lib/pinyin";
+import { toPinyin, normalizePhone, validatePhone, getPhoneLast4, buildSearchText } from "@/lib/pinyin";
 import * as XLSX from "xlsx";
 
 export async function POST(request: NextRequest) {
@@ -24,11 +24,18 @@ export async function POST(request: NextRequest) {
   for (let i = 0; i < rawData.length; i++) {
     const row = rawData[i];
     const nameCn = (row["姓名"] || row["name"] || row["中文名"] || row["客户姓名"] || "").toString().trim();
-    const phone = (row["手机号"] || row["电话"] || row["phone"] || row["手机"] || row["联系电话"] || "").toString().trim();
+    const rawPhone = (row["手机号"] || row["电话"] || row["phone"] || row["手机"] || row["联系电话"] || "").toString().trim();
+    const phone = normalizePhone(rawPhone);
 
     if (!nameCn || !phone) {
       failed++;
       errors.push(`第 ${i + 2} 行: 姓名或手机号为空`);
+      continue;
+    }
+
+    if (validatePhone(phone)) {
+      failed++;
+      errors.push(`第 ${i + 2} 行: 手机号格式不正确 "${rawPhone}"，需 8-15 位数字`);
       continue;
     }
 

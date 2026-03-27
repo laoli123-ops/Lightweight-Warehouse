@@ -63,6 +63,7 @@ const translations = {
     labelPhone: "手机号",
     labelPinyin: "拼音（留空自动生成）",
     pinyinPlaceholder: "留空则自动根据中文名生成",
+    phoneInvalid: "手机号格式不正确，需 8-15 位数字（可含国际区号前缀 +）",
 
     // Customer import
     customerImportTitle: "客户数据导入",
@@ -214,6 +215,7 @@ const translations = {
     labelPhone: "전화번호",
     labelPinyin: "병음 (비우면 자동 생성)",
     pinyinPlaceholder: "비우면 이름에서 자동 생성",
+    phoneInvalid: "전화번호 형식이 올바르지 않습니다. 8-15자리 숫자 (국제 번호 + 허용)",
 
     // Customer import
     customerImportTitle: "고객 데이터 가져오기",
