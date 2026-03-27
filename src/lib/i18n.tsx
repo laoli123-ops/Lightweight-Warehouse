@@ -129,6 +129,8 @@ const translations = {
     thOrderNo: "快递单号",
     thCustomerName: "姓名",
     shipBtn: "一键出库",
+    exportExcel: "导出 Excel",
+    exporting: "导出中...",
 
     // Labels
     labelsTitle: "标签打印",
@@ -281,6 +283,8 @@ const translations = {
     thOrderNo: "운송장 번호",
     thCustomerName: "이름",
     shipBtn: "출고 처리",
+    exportExcel: "Excel 내보내기",
+    exporting: "내보내는 중...",
 
     // Labels
     labelsTitle: "라벨 인쇄",

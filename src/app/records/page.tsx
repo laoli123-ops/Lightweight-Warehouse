@@ -32,6 +32,7 @@ export default function RecordsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -66,12 +67,66 @@ export default function RecordsPage() {
     fetchRecords();
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ page: "1", pageSize: "100000" });
+      if (search) params.set("q", search);
+      if (statusFilter) params.set("status", statusFilter);
+      const res = await fetch(`/api/inbound?${params}`);
+      const data = await res.json();
+      const allRecords: InboundRecord[] = data.records;
+
+      const XLSX = await import("xlsx");
+
+      const isKo = locale === "ko";
+      const rows = allRecords.map((r) => ({
+        [isKo ? "일련번호" : "序号"]: r.serialNo,
+        [isKo ? "입고 시간" : "入库时间"]: new Date(r.inboundTime).toLocaleString(
+          isKo ? "ko-KR" : "zh-CN"
+        ),
+        [isKo ? "운송장 번호" : "快递单号"]: r.inboundOrderNo,
+        [isKo ? "이름" : "姓名"]: r.inboundName || r.customer.nameCn,
+        [isKo ? "전화번호" : "手机号"]: r.inboundPhone || r.customer.phone,
+        [isKo ? "창고 코드" : "仓库码"]: r.warehouseCode.warehouseCode,
+        [isKo ? "구역" : "区域"]: r.warehouseCode.areaCode,
+        [isKo ? "상태" : "状态"]:
+          r.outboundStatus === "shipped"
+            ? (isKo ? "출고완료" : "已出库")
+            : (isKo ? "미출고" : "未出库"),
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+
+      const colWidths = [8, 18, 24, 12, 16, 10, 6, 8];
+      ws["!cols"] = colWidths.map((w) => ({ wch: w }));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, isKo ? "재고 기록" : "库存记录");
+
+      const date = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `${isKo ? "재고기록" : "库存记录"}_${date}.xlsx`);
+    } catch (e) {
+      console.error("Export failed:", e);
+    }
+    setExporting(false);
+  };
+
   const totalPages = Math.ceil(total / 20);
   const dateLang = locale === "ko" ? "ko-KR" : "zh-CN";
 
   return (
     <div className="mx-auto max-w-6xl">
-      <h1 className="mb-6 text-2xl font-bold">{t.recordsTitle}</h1>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold">{t.recordsTitle}</h1>
+        <button
+          onClick={handleExport}
+          disabled={exporting || total === 0}
+          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+        >
+          {exporting ? t.exporting : t.exportExcel}
+        </button>
+      </div>
 
       <form onSubmit={handleSearch} className="mb-4 flex flex-wrap gap-2">
         <input
