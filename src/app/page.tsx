@@ -10,6 +10,7 @@ const modules = [
   { href: "/inbound", labelKey: "navInbound" as const, descKey: "descInbound" as const, icon: "📦", color: "bg-orange-500" },
   { href: "/records", labelKey: "navRecords" as const, descKey: "descRecords" as const, icon: "📋", color: "bg-teal-500" },
   { href: "/labels", labelKey: "navLabels" as const, descKey: "descLabels" as const, icon: "🖨️", color: "bg-rose-500" },
+  { href: "/bulk", labelKey: "navBulk" as const, descKey: "descBulk" as const, icon: "🚚", color: "bg-amber-500" },
 ];
 
 export default function HomePage() {

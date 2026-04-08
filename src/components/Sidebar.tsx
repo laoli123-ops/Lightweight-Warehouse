@@ -12,6 +12,7 @@ const navKeys = [
   { href: "/inbound", key: "navInbound" as const, icon: "📦" },
   { href: "/records", key: "navRecords" as const, icon: "📋" },
   { href: "/labels", key: "navLabels" as const, icon: "🖨️" },
+  { href: "/bulk", key: "navBulk" as const, icon: "🚚" },
 ];
 
 function LangSwitch() {
