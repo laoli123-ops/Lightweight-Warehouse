@@ -175,6 +175,10 @@ const translations = {
     print: "打印",
     labelSummary: (total: number, pages: number, perPage: number) =>
       `共 ${total} 个标签，${pages} 页（每页 ${perPage} 个）`,
+    labelOrderNormal: "正常顺序",
+    labelOrderNormalHint: "适合打印后分开裁切",
+    labelOrderStack: "整叠优化",
+    labelOrderStackHint: "适合不分开直接整叠使用",
     labelHint: '输入区域前缀和编号范围，点击"生成预览"',
     labelSpec: "适配 100mm × 150mm 标签纸，每页 3×5 = 15 个标签",
     labelUsedUpTo: (area: string, seq: number) => `已用到 ${area}${seq}`,
@@ -380,6 +384,10 @@ const translations = {
     print: "인쇄",
     labelSummary: (total: number, pages: number, perPage: number) =>
       `총 ${total}개 라벨, ${pages}페이지 (페이지당 ${perPage}개)`,
+    labelOrderNormal: "일반 순서",
+    labelOrderNormalHint: "인쇄 후 분리 재단에 적합",
+    labelOrderStack: "스택 최적화",
+    labelOrderStackHint: "분리하지 않고 그대로 사용에 적합",
     labelHint: "구역 접두사와 번호 범위를 입력하고 \"미리보기 생성\"을 클릭하세요",
     labelSpec: "100mm × 150mm 라벨지 호환, 페이지당 3×5 = 15개 라벨",
     labelUsedUpTo: (area: string, seq: number) => `${area}${seq} 까지 사용됨`,

@@ -45,6 +45,7 @@ export default function LabelsPage() {
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [selectedContinuePages, setSelectedContinuePages] = useState<1 | 2 | 3>(1);
   const [warning, setWarning] = useState<string | null>(null);
+  const [printOrder, setPrintOrder] = useState<"normal" | "stack_optimized">("stack_optimized");
 
   const totalCount = end >= start ? end - start + 1 : 0;
   const pageCount = Math.ceil(totalCount / PER_PAGE);
@@ -100,7 +101,8 @@ export default function LabelsPage() {
     router.push(`/warehouse-codes?area=${prefix}&start=${s}&end=${e}`);
   };
 
-  const pages = chunkArray(codes, PER_PAGE);
+  const chunked = chunkArray(codes, PER_PAGE);
+  const pages = printOrder === "stack_optimized" ? [...chunked].reverse() : chunked;
 
   return (
     <div>
@@ -175,6 +177,36 @@ export default function LabelsPage() {
             <p className="mt-3 text-sm text-gray-500">
               {t.labelSummary(totalCount, pageCount, PER_PAGE)}
             </p>
+          )}
+
+          {pageCount > 1 && (
+            <div className="mt-3 flex items-center gap-1.5">
+              <div className="flex rounded-lg bg-gray-100 p-0.5">
+                <button
+                  onClick={() => setPrintOrder("normal")}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                    printOrder === "normal"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {t.labelOrderNormal}
+                </button>
+                <button
+                  onClick={() => setPrintOrder("stack_optimized")}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                    printOrder === "stack_optimized"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {t.labelOrderStack}
+                </button>
+              </div>
+              <span className="text-xs text-gray-400">
+                {printOrder === "normal" ? t.labelOrderNormalHint : t.labelOrderStackHint}
+              </span>
+            </div>
           )}
         </div>
 
