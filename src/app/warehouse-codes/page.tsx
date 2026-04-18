@@ -84,7 +84,7 @@ export default function WarehouseCodesPage() {
                 onChange={(e) => setGenForm({ ...genForm, areaCode: e.target.value })}
                 className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               >
-                {["A", "B", "C", "D", "E", "F"].map((a) => (
+                {["A", "B", "C", "D", "E", "F","G"].map((a) => (
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>
@@ -130,7 +130,7 @@ export default function WarehouseCodesPage() {
           className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
           <option value="">{t.allAreas}</option>
-          {["A", "B", "C", "D", "E", "F"].map((a) => (
+          {["A", "B", "C", "D", "E", "F","G"].map((a) => (
             <option key={a} value={a}>{t.areaLabel(a)}</option>
           ))}
         </select>

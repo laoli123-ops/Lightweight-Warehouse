@@ -56,7 +56,7 @@ export default function LabelsPage() {
                 onChange={(e) => setPrefix(e.target.value)}
                 className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               >
-                {["A", "B", "C", "D", "E", "F"].map((p) => (
+                {["A", "B", "C", "D", "E", "F","G"].map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
