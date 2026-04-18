@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+
+const AREAS = ["A", "B", "C", "D", "E", "F", "G", "H", "L"];
 
 interface WCode {
   id: number;
@@ -11,8 +14,26 @@ interface WCode {
   codeStatus: string;
 }
 
+interface Progress {
+  area: string;
+  lastUsedSeq: number | null;
+  nextUnusedSeq: number | null;
+  unusedCount: number;
+  maxSeqAll: number | null;
+  suggestedStartSeq: number;
+}
+
 export default function WarehouseCodesPage() {
+  return (
+    <Suspense>
+      <WarehouseCodesInner />
+    </Suspense>
+  );
+}
+
+function WarehouseCodesInner() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
   const [codes, setCodes] = useState<WCode[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -22,6 +43,40 @@ export default function WarehouseCodesPage() {
   const [showGenerate, setShowGenerate] = useState(false);
   const [genForm, setGenForm] = useState({ areaCode: "A", startSeq: 101, endSeq: 150 });
   const [genResult, setGenResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [initDone, setInitDone] = useState(false);
+  const [selectedQuickRange, setSelectedQuickRange] = useState<15 | 30 | 45 | null>(null);
+
+  // Read query params on mount to prefill the generation form
+  useEffect(() => {
+    const qArea = searchParams.get("area");
+    const qStart = searchParams.get("start");
+    const qEnd = searchParams.get("end");
+    if (qArea || qStart || qEnd) {
+      setGenForm((prev) => ({
+        areaCode: qArea || prev.areaCode,
+        startSeq: qStart ? parseInt(qStart) || prev.startSeq : prev.startSeq,
+        endSeq: qEnd ? parseInt(qEnd) || prev.endSeq : prev.endSeq,
+      }));
+      setShowGenerate(true);
+    }
+    setInitDone(true);
+  }, [searchParams]);
+
+  const fetchProgress = useCallback(async (area: string) => {
+    if (!area) { setProgress(null); return; }
+    try {
+      const res = await fetch(`/api/warehouse-codes/progress?area=${area}`);
+      setProgress(await res.json());
+    } catch {
+      setProgress(null);
+    }
+  }, []);
+
+  // Fetch progress when genForm.areaCode changes
+  useEffect(() => {
+    if (initDone && showGenerate) fetchProgress(genForm.areaCode);
+  }, [genForm.areaCode, showGenerate, initDone, fetchProgress]);
 
   const statusMap: Record<string, { label: string; color: string }> = {
     unused: { label: t.statusUnused, color: "bg-green-100 text-green-700" },
@@ -56,6 +111,16 @@ export default function WarehouseCodesPage() {
     if (res.ok) {
       setGenResult(data);
       fetchCodes();
+      fetchProgress(genForm.areaCode);
+    }
+  };
+
+  const applyQuickRange = (count: number) => {
+    if (!progress) return;
+    const s = progress.suggestedStartSeq;
+    setGenForm({ ...genForm, startSeq: s, endSeq: s + count - 1 });
+    if (count === 15 || count === 30 || count === 45) {
+      setSelectedQuickRange(count);
     }
   };
 
@@ -66,7 +131,7 @@ export default function WarehouseCodesPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">{t.navWarehouseCodes}</h1>
         <button
-          onClick={() => { setShowGenerate(!showGenerate); setGenResult(null); }}
+          onClick={() => { setShowGenerate(!showGenerate); setGenResult(null); if (!showGenerate) fetchProgress(genForm.areaCode); }}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           {t.batchGenerate}
@@ -76,15 +141,75 @@ export default function WarehouseCodesPage() {
       {showGenerate && (
         <div className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-base font-bold">{t.batchGenerateTitle}</h2>
+
+          {/* Progress card */}
+          {progress && (
+            <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-4">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+                {progress.lastUsedSeq !== null ? (
+                  <span className="text-gray-600">
+                    <span className="inline-block h-2 w-2 rounded-full bg-orange-400 mr-1.5 align-middle" />
+                    {t.labelUsedUpTo(progress.area, progress.lastUsedSeq)}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">
+                    <span className="inline-block h-2 w-2 rounded-full bg-gray-300 mr-1.5 align-middle" />
+                    {t.labelNoneUsed}
+                  </span>
+                )}
+                {progress.maxSeqAll !== null && (
+                  <span className="text-gray-500">
+                    <span className="inline-block h-2 w-2 rounded-full bg-gray-400 mr-1.5 align-middle" />
+                    {t.labelMaxSeq(progress.area, progress.maxSeqAll)}
+                  </span>
+                )}
+                {progress.nextUnusedSeq !== null ? (
+                  <span className="text-gray-600">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-400 mr-1.5 align-middle" />
+                    {t.labelNextAvail(progress.area, progress.nextUnusedSeq)}
+                  </span>
+                ) : (
+                  <span className="text-gray-600">
+                    <span className="inline-block h-2 w-2 rounded-full bg-purple-400 mr-1.5 align-middle" />
+                    {t.labelSuggested(progress.area, progress.suggestedStartSeq)}
+                  </span>
+                )}
+                <span className="text-gray-600">
+                  <span className="inline-block h-2 w-2 rounded-full bg-blue-400 mr-1.5 align-middle" />
+                  {t.labelUnusedCount(progress.unusedCount)}
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[15, 30, 45].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => applyQuickRange(n)}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                      selectedQuickRange === n
+                        ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                        : "border border-gray-200 text-gray-600 hover:bg-white"
+                    }`}
+                  >
+                    {t.wcQuickRange(n)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">{t.labelArea}</label>
               <select
                 value={genForm.areaCode}
-                onChange={(e) => setGenForm({ ...genForm, areaCode: e.target.value })}
+                onChange={(e) => {
+                  setGenForm({ ...genForm, areaCode: e.target.value });
+                  setSelectedQuickRange(null);
+                }}
                 className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               >
-                {["A", "B", "C", "D", "E", "F","G"].map((a) => (
+                {AREAS.map((a) => (
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>
@@ -94,7 +219,10 @@ export default function WarehouseCodesPage() {
               <input
                 type="number"
                 value={genForm.startSeq}
-                onChange={(e) => setGenForm({ ...genForm, startSeq: parseInt(e.target.value) || 0 })}
+                onChange={(e) => {
+                  setGenForm({ ...genForm, startSeq: parseInt(e.target.value) || 0 });
+                  setSelectedQuickRange(null);
+                }}
                 className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -103,7 +231,10 @@ export default function WarehouseCodesPage() {
               <input
                 type="number"
                 value={genForm.endSeq}
-                onChange={(e) => setGenForm({ ...genForm, endSeq: parseInt(e.target.value) || 0 })}
+                onChange={(e) => {
+                  setGenForm({ ...genForm, endSeq: parseInt(e.target.value) || 0 });
+                  setSelectedQuickRange(null);
+                }}
                 className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -130,7 +261,7 @@ export default function WarehouseCodesPage() {
           className="rounded-lg border border-gray-200 px-3 py-2 text-base sm:text-sm focus:border-blue-500 focus:outline-none"
         >
           <option value="">{t.allAreas}</option>
-          {["A", "B", "C", "D", "E", "F","G"].map((a) => (
+          {AREAS.map((a) => (
             <option key={a} value={a}>{t.areaLabel(a)}</option>
           ))}
         </select>

@@ -177,6 +177,23 @@ const translations = {
       `共 ${total} 个标签，${pages} 页（每页 ${perPage} 个）`,
     labelHint: '输入区域前缀和编号范围，点击"生成预览"',
     labelSpec: "适配 100mm × 150mm 标签纸，每页 3×5 = 15 个标签",
+    labelUsedUpTo: (area: string, seq: number) => `已用到 ${area}${seq}`,
+    labelNextAvail: (area: string, seq: number) => `下一个可用 ${area}${seq}`,
+    labelUnusedCount: (n: number) => `剩余可用 ${n} 个`,
+    labelNoUnused: (area: string, seq: number) =>
+      `区域 ${area} 没有可用仓库码。建议下一个起始编号：${area}${seq}`,
+    labelNoneUsed: "该区域暂无已使用的仓库码",
+    labelAutoFill: "自动填充下一页",
+    labelContinue1: "续打 1 页",
+    labelContinue2: "续打 2 页",
+    labelContinue3: "续打 3 页",
+    labelGoGenerate: "前往仓库码池生成",
+    labelNotEnough: (area: string, have: number, need: number) =>
+      `区域 ${area} 仅剩 ${have} 个可用码，不足 ${need} 个（需要 ${need} 个才能填满）。请先生成更多仓库码。`,
+    labelGenMore: (n: number) => `去生成 ${n} 个`,
+    labelSuggested: (area: string, seq: number) => `建议起始 ${area}${seq}`,
+    labelMaxSeq: (area: string, seq: number) => `最大编号 ${area}${seq}`,
+    wcQuickRange: (n: number) => `建议范围 (${n} 个)`,
 
     // Scanner
     scanTitle: "扫描条码",
@@ -365,6 +382,23 @@ const translations = {
       `총 ${total}개 라벨, ${pages}페이지 (페이지당 ${perPage}개)`,
     labelHint: "구역 접두사와 번호 범위를 입력하고 \"미리보기 생성\"을 클릭하세요",
     labelSpec: "100mm × 150mm 라벨지 호환, 페이지당 3×5 = 15개 라벨",
+    labelUsedUpTo: (area: string, seq: number) => `${area}${seq} 까지 사용됨`,
+    labelNextAvail: (area: string, seq: number) => `다음 사용 가능 ${area}${seq}`,
+    labelUnusedCount: (n: number) => `미사용 ${n}개 남음`,
+    labelNoUnused: (area: string, seq: number) =>
+      `구역 ${area}에 사용 가능한 코드가 없습니다. 다음 시작 번호 추천: ${area}${seq}`,
+    labelNoneUsed: "이 구역에 사용된 창고 코드가 없습니다",
+    labelAutoFill: "다음 페이지 자동 채우기",
+    labelContinue1: "1페이지 이어서",
+    labelContinue2: "2페이지 이어서",
+    labelContinue3: "3페이지 이어서",
+    labelGoGenerate: "창고 코드 풀에서 생성하기",
+    labelNotEnough: (area: string, have: number, need: number) =>
+      `구역 ${area}에 사용 가능한 코드가 ${have}개뿐이며, ${need}개가 필요합니다. 먼저 더 생성해 주세요.`,
+    labelGenMore: (n: number) => `${n}개 생성하러 가기`,
+    labelSuggested: (area: string, seq: number) => `추천 시작 ${area}${seq}`,
+    labelMaxSeq: (area: string, seq: number) => `최대 번호 ${area}${seq}`,
+    wcQuickRange: (n: number) => `추천 범위 (${n}개)`,
 
     // Scanner
     scanTitle: "바코드 스캔",
