@@ -21,7 +21,10 @@ export async function POST(request: NextRequest) {
   const shipped = await prisma.$transaction(async (tx) => {
     const { count } = await tx.inboundRecord.updateMany({
       where: { id: { in: records.map((r) => r.id) }, outboundStatus: "unshipped" },
-      data: { outboundStatus: "shipped" },
+      data: {
+        outboundStatus: "shipped",
+        outboundAt: new Date(),
+      },
     });
 
     const codeIds = records.map((r) => r.warehouseCodeId);

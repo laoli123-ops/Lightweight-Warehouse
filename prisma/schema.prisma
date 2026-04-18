@@ -43,9 +43,10 @@ model InboundRecord {
   inboundOrderNo  String   @map("inbound_order_no")
   customerId      Int      @map("customer_id")
   warehouseCodeId Int      @map("warehouse_code_id")
-  outboundStatus  String   @default("unshipped") @map("outbound_status")
-  inboundName     String?  @map("inbound_name")
-  inboundPhone    String?  @map("inbound_phone")
+  outboundStatus  String    @default("unshipped") @map("outbound_status")
+  outboundAt      DateTime? @map("outbound_at")
+  inboundName     String?   @map("inbound_name")
+  inboundPhone    String?   @map("inbound_phone")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

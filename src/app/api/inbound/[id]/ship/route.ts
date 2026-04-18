@@ -24,7 +24,10 @@ export async function POST(
   const updated = await prisma.$transaction(async (tx) => {
     const rec = await tx.inboundRecord.update({
       where: { id: recordId },
-      data: { outboundStatus: "shipped" },
+      data: {
+        outboundStatus: "shipped",
+        outboundAt: new Date(),
+      },
       include: { customer: true, warehouseCode: true },
     });
 

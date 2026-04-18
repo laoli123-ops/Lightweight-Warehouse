@@ -11,6 +11,7 @@ interface InboundRecord {
   inboundName: string;
   inboundPhone: string;
   outboundStatus: string;
+  outboundAt: string | null;
   customer: {
     id: number;
     nameCn: string;
@@ -80,11 +81,10 @@ export default function RecordsPage() {
       const XLSX = await import("xlsx");
 
       const isKo = locale === "ko";
+      const fmtLang = isKo ? "ko-KR" : "zh-CN";
       const rows = allRecords.map((r) => ({
         [isKo ? "일련번호" : "序号"]: r.serialNo,
-        [isKo ? "입고 시간" : "入库时间"]: new Date(r.inboundTime).toLocaleString(
-          isKo ? "ko-KR" : "zh-CN"
-        ),
+        [isKo ? "입고 시간" : "入库时间"]: new Date(r.inboundTime).toLocaleString(fmtLang),
         [isKo ? "운송장 번호" : "快递单号"]: r.inboundOrderNo,
         [isKo ? "이름" : "姓名"]: r.inboundName || r.customer.nameCn,
         [isKo ? "전화번호" : "手机号"]: r.inboundPhone || r.customer.phone,
@@ -94,12 +94,12 @@ export default function RecordsPage() {
           r.outboundStatus === "shipped"
             ? (isKo ? "출고완료" : "已出库")
             : (isKo ? "미출고" : "未出库"),
+        [isKo ? "출고 시간" : "出库时间"]:
+          r.outboundAt ? new Date(r.outboundAt).toLocaleString(fmtLang) : "-",
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
-
-      const colWidths = [8, 18, 24, 12, 16, 10, 6, 8];
-      ws["!cols"] = colWidths.map((w) => ({ wch: w }));
+      ws["!cols"] = [8, 18, 24, 12, 16, 10, 6, 8, 18].map((w) => ({ wch: w }));
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, isKo ? "재고 기록" : "库存记录");
@@ -164,17 +164,18 @@ export default function RecordsPage() {
               <th className="px-3 py-3 font-medium text-gray-600">{t.thPhone}</th>
               <th className="px-3 py-3 font-medium text-gray-600">{t.thWarehouseCode}</th>
               <th className="px-3 py-3 font-medium text-gray-600">{t.thStatus}</th>
+              <th className="px-3 py-3 font-medium text-gray-600">{t.thOutboundTime}</th>
               <th className="px-3 py-3 font-medium text-gray-600">{t.thActions}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">{t.loading}</td>
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">{t.loading}</td>
               </tr>
             ) : records.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">{t.noData}</td>
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">{t.noData}</td>
               </tr>
             ) : (
               records.map((r) => (
@@ -204,6 +205,16 @@ export default function RecordsPage() {
                         {t.statusUnshipped}
                       </span>
                     )}
+                  </td>
+                  <td className="px-3 py-3 text-gray-500 whitespace-nowrap text-xs">
+                    {r.outboundAt
+                      ? new Date(r.outboundAt).toLocaleString(dateLang, {
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "-"}
                   </td>
                   <td className="px-3 py-3">
                     {r.outboundStatus === "unshipped" && (
