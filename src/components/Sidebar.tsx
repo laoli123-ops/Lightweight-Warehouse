@@ -91,7 +91,7 @@ export function Sidebar() {
   return (
     <>
       <button
-        className="fixed left-3 top-3 z-50 rounded-lg bg-white p-2 shadow-md md:hidden"
+        className="mobile-menu-button fixed left-3 top-3 z-50 rounded-lg bg-white p-2 shadow-md md:hidden"
         onClick={() => setOpen(true)}
       >
         <svg

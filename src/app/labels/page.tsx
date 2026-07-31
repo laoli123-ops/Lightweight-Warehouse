@@ -105,8 +105,8 @@ export default function LabelsPage() {
   const pages = printOrder === "stack_optimized" ? [...chunked].reverse() : chunked;
 
   return (
-    <div>
-      <div className="mx-auto max-w-3xl print:hidden">
+    <div className="label-print-root">
+      <div className="label-print-controls mx-auto max-w-3xl print:hidden">
         <h1 className="mb-6 text-2xl font-bold">{t.labelsTitle}</h1>
 
         <div className="mb-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -359,20 +359,57 @@ export default function LabelsPage() {
         @media print {
           @page { size: 100mm 150mm; margin: 0; }
           html, body {
-            margin: 0 !important; padding: 0 !important;
-            width: 100mm; height: 150mm; overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100mm !important;
+            min-height: 0 !important;
+            background: #fff !important;
+            overflow: visible !important;
           }
-          body * { visibility: hidden; }
-          #print-area, #print-area * { visibility: visible; }
+          body > div {
+            display: block !important;
+            height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+          }
+          aside, .mobile-menu-button, .label-print-controls {
+            display: none !important;
+          }
+          main {
+            display: block !important;
+            width: 100mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          .label-print-root {
+            width: 100mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
           #print-area {
-            position: absolute; left: 0; top: 0;
-            margin: 0 !important; padding: 0 !important; width: 100mm;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100mm !important;
           }
           .label-page {
-            width: 100mm; height: 150mm; margin: 0; padding: 0; border: none;
-            page-break-after: always; break-after: page;
+            width: 100mm !important;
+            height: 150mm !important;
+            max-height: 150mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            overflow: hidden !important;
+            break-after: auto;
+            break-inside: avoid;
+            page-break-after: auto;
+            page-break-inside: avoid;
           }
-          .label-page:last-child { page-break-after: avoid; break-after: avoid; }
+          .label-page + .label-page {
+            break-before: page;
+            page-break-before: always;
+          }
           .label-cell { border: 0.3px solid #999; }
           .label-text { font-size: 7mm; font-weight: 900; color: #000; }
         }

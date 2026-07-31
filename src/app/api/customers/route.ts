@@ -2,6 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { toPinyin, normalizePhone, validatePhone, getPhoneLast4, buildSearchText } from "@/lib/pinyin";
 
+type CustomerSearchResult = Awaited<ReturnType<typeof prisma.customer.findMany>>[number];
+
+function getCustomerSearchRank(customer: CustomerSearchResult, q: string): number {
+  const query = q.trim().toLowerCase();
+  const queryDigits = query.replace(/\D/g, "");
+  const phoneDigits = customer.phone.replace(/\D/g, "");
+  const phoneLast4 = customer.phoneLast4.toLowerCase();
+  const nameCn = customer.nameCn.toLowerCase();
+  const namePinyin = customer.namePinyin.toLowerCase();
+
+  if (queryDigits) {
+    if (phoneLast4 === queryDigits) return 0;
+    if (phoneLast4.endsWith(queryDigits)) return 1;
+    if (phoneDigits.endsWith(queryDigits)) return 2;
+    if (phoneLast4.includes(queryDigits)) return 3;
+    if (phoneDigits.includes(queryDigits)) return 4;
+  }
+
+  if (nameCn === query || namePinyin === query) return 5;
+  if (nameCn.startsWith(query) || namePinyin.startsWith(query)) return 6;
+  return 7;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.toLowerCase() || "";
@@ -12,15 +35,23 @@ export async function GET(request: NextRequest) {
     ? { searchText: { contains: q } }
     : {};
 
-  const [customers, total] = await Promise.all([
+  const [matchedCustomers, total] = await Promise.all([
     prisma.customer.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
     }),
     prisma.customer.count({ where }),
   ]);
+
+  const customers = q
+    ? matchedCustomers
+        .sort((a, b) => {
+          const rankDiff = getCustomerSearchRank(a, q) - getCustomerSearchRank(b, q);
+          if (rankDiff !== 0) return rankDiff;
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        })
+        .slice((page - 1) * pageSize, page * pageSize)
+    : matchedCustomers.slice((page - 1) * pageSize, page * pageSize);
 
   return NextResponse.json({ customers, total, page, pageSize });
 }
