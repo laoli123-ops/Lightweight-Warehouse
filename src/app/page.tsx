@@ -8,6 +8,7 @@ const modules = [
   { href: "/customers/import", labelKey: "navCustomerImport" as const, descKey: "descCustomerImport" as const, icon: "📥", color: "bg-green-500" },
   { href: "/warehouse-codes", labelKey: "navWarehouseCodes" as const, descKey: "descWarehouseCodes" as const, icon: "🏷️", color: "bg-purple-500" },
   { href: "/inbound", labelKey: "navInbound" as const, descKey: "descInbound" as const, icon: "📦", color: "bg-orange-500" },
+  { href: "/prescan", labelKey: "navPrescan" as const, descKey: "descPrescan" as const, icon: "📡", color: "bg-cyan-600" },
   { href: "/records", labelKey: "navRecords" as const, descKey: "descRecords" as const, icon: "📋", color: "bg-teal-500" },
   { href: "/labels", labelKey: "navLabels" as const, descKey: "descLabels" as const, icon: "🖨️", color: "bg-rose-500" },
   { href: "/bulk", labelKey: "navBulk" as const, descKey: "descBulk" as const, icon: "🚚", color: "bg-amber-500" },

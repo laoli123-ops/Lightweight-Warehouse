@@ -37,6 +37,7 @@ const translations = {
     navCustomerImport: "客户导入",
     navWarehouseCodes: "仓库码池",
     navInbound: "入库登记",
+    navPrescan: "快递单号预扫描揽收",
     navRecords: "库存记录",
     navLabels: "标签打印",
 
@@ -45,6 +46,7 @@ const translations = {
     descCustomerImport: "从 Excel/CSV 批量导入客户",
     descWarehouseCodes: "生成和管理仓库码",
     descInbound: "登记包裹入库信息",
+    descPrescan: "连续扫描并汇总待揽收快递单号",
     descRecords: "查看入库记录，一键出库",
     descLabels: "预览仓库码标签，准备打印",
 
@@ -247,6 +249,7 @@ const translations = {
     navCustomerImport: "고객 가져오기",
     navWarehouseCodes: "창고 코드 풀",
     navInbound: "입고 등록",
+    navPrescan: "운송장 사전 스캔 수거",
     navRecords: "재고 기록",
     navLabels: "라벨 인쇄",
 
@@ -255,6 +258,7 @@ const translations = {
     descCustomerImport: "Excel/CSV에서 고객 일괄 가져오기",
     descWarehouseCodes: "창고 코드 생성 및 관리",
     descInbound: "택배 입고 정보 등록",
+    descPrescan: "수거할 운송장 번호를 연속 스캔 및 취합",
     descRecords: "입고 기록 조회, 원클릭 출고",
     descLabels: "창고 코드 라벨 미리보기 및 인쇄",
 

@@ -10,6 +10,7 @@ const navKeys = [
   { href: "/customers/import", key: "navCustomerImport" as const, icon: "📥" },
   { href: "/warehouse-codes", key: "navWarehouseCodes" as const, icon: "🏷️" },
   { href: "/inbound", key: "navInbound" as const, icon: "📦" },
+  { href: "/prescan", key: "navPrescan" as const, icon: "📡" },
   { href: "/records", key: "navRecords" as const, icon: "📋" },
   { href: "/labels", key: "navLabels" as const, icon: "🖨️" },
   { href: "/bulk", key: "navBulk" as const, icon: "🚚" },
